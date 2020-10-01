@@ -94,6 +94,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     private MorphErrorHandler errorHandler = new DefaultErrorHandler();
     private int recordCount;
     private final List<FlushListener> recordEndListener = new ArrayList<>();
+    private boolean passEntityEvents;
 
     protected Metamorph() {
         // package private
@@ -217,7 +218,10 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     protected void registerNamedValueReceiver(final String source, final NamedValueReceiver data) {
         if (ELSE_KEYWORD.equals(source)) {
             elseSources.add(data);
-        } else {
+        } else if ("_passEntityEvents".equals(source)) {
+            this.passEntityEvents = true;
+        }  
+        else {
             dataRegistry.register(source, data);
         }
     }
@@ -268,9 +272,9 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         entityCountStack.push(Integer.valueOf(entityCount));
 
         flattener.startEntity(name);
-
-
-
+        if (this.passEntityEvents) {
+            outputStreamReceiver.startEntity(name);
+        }
     }
 
     @Override
@@ -278,7 +282,9 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         dispatch(flattener.getCurrentPath(), "", null);
         currentEntityCount = entityCountStack.pop().intValue();
         flattener.endEntity();
-
+        if (this.passEntityEvents) {
+            outputStreamReceiver.endEntity();
+        }
     }
 
 
@@ -428,6 +434,10 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     public SourceLocation getSourceLocation() {
         // Metamorph does not have a source location
         return null;
+    }
+
+    void setPassEntityEvents (boolean passEntityEvents) {
+        this.passEntityEvents=passEntityEvents;
     }
 
 }
