@@ -216,6 +216,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     }
 
     protected void registerNamedValueReceiver(final String source, final NamedValueReceiver data) {
+        System.out.println("In registerNamedValueReceiver: source="+ source +" data="+data);
         if (ELSE_KEYWORD.equals(source)) {
             elseSources.add(data);
         } else if ("_passEntityEvents".equals(source)) {
@@ -266,25 +267,25 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         if (name == null) {
             throw new IllegalArgumentException("Entity name must not be null.");
         }
-
         ++entityCount;
         currentEntityCount = entityCount;
         entityCountStack.push(Integer.valueOf(entityCount));
-
-        flattener.startEntity(name);
+System.out.println("Metamorph-Entity-Start:'"+name+"'");
         if (this.passEntityEvents) {
             outputStreamReceiver.startEntity(name);
-        }
+        }else
+        flattener.startEntity(name);
     }
 
     @Override
     public void endEntity() {
         dispatch(flattener.getCurrentPath(), "", null);
         currentEntityCount = entityCountStack.pop().intValue();
-        flattener.endEntity();
+        System.out.println("Metamorph-Entity-End");
         if (this.passEntityEvents) {
             outputStreamReceiver.endEntity();
-        }
+        }else
+       flattener.endEntity();
     }
 
 
@@ -313,6 +314,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     }
 
     protected void dispatch(final String path, final String value, final List<NamedValueReceiver> fallback) {
+       System.out.println("dispatch. path="+path + "; value="+value);
         final List<NamedValueReceiver> matchingData = findMatchingData(path, fallback);
         if (null != matchingData) {
             send(path, value, matchingData);
@@ -330,6 +332,8 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     private void send(final String key, final String value, final List<NamedValueReceiver> dataList) {
         for (final NamedValueReceiver data : dataList) {
             try {
+                System.out.println("send. key="+key + "; value="+value+" receiver:"+data.toString());
+
                 data.receive(key, value, null, recordCount, currentEntityCount);
             } catch (final RuntimeException e) {
                 errorHandler.error(e);
