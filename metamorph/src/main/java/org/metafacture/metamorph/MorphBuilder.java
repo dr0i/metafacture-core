@@ -202,7 +202,10 @@ public final class MorphBuilder extends AbstractMetamorphDomWalker {
 
         final String source = resolvedAttribute(dataNode, AttributeName.SOURCE);
         metamorph.registerNamedValueReceiver(source, delegate);
-
+       if ( stack.peek().getPipe() instanceof Entity){
+           System.out.println("yeah entity!");
+           final String nodeName = dataNode.getLocalName();
+       }
         stack.push(new StackFrame(data));
     }
 

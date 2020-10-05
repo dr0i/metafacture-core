@@ -25,9 +25,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.metafacture.commons.ResourceUtil;
 import org.metafacture.framework.FluxCommand;
@@ -80,6 +82,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     private final Registry<NamedValueReceiver> dataRegistry =
             new WildcardRegistry<>();
     private final List<NamedValueReceiver> elseSources = new ArrayList<>();
+    private final List<NamedValueReceiver> passEntityEventsSources = new ArrayList<>();
 
     private final Map<String, Map<String, String>> maps = new HashMap<>();
     private final List<Closeable> resources = new ArrayList<>();
@@ -95,6 +98,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     private int recordCount;
     private final List<FlushListener> recordEndListener = new ArrayList<>();
     private boolean passEntityEvents;
+    private boolean passEntity;
 
     protected Metamorph() {
         // package private
@@ -198,10 +202,36 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         flattener.setReceiver(new DefaultStreamReceiver() {
             @Override
             public void literal(final String name, final String value) {
+                System.out.println("dis:init,name="+name +", value="+value);
+            //    if (name != null && value!=null) 
+            //    outputStreamReceiver.startEntity((name+ "  ").substring(0,5));
+
                 dispatch(name, value, getElseSources());
-            }
+            //     if (name != null && value!=null) 
+            //     outputStreamReceiver.endEntity();
+             }
+             @Override
+             public void startEntity(final String name){
+                dispatchEntityStart(name);
+
+             }
         });
     }
+
+
+
+    protected void dispatchEntityStart(String name) {
+        System.out.println("############## name='"+name +"' currenteEntiyt:'" + flattener.getCurrentEntityName()+"'");
+        this.passEntity=false;
+        if (this.passEntityEvents && ! registeredEntities.contains(name)) {
+            outputStreamReceiver.startEntity(name);
+            this.passEntity=true;
+            System.out.println("# passEntityEvents=true;");
+            flattener.endEntity();
+        }
+    }
+
+ 
 
     protected List<NamedValueReceiver> getElseSources() {
         return elseSources;
@@ -214,13 +244,17 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     public void setErrorHandler(final MorphErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
     }
-
+    HashSet<String> registeredEntities = new HashSet<>();
     protected void registerNamedValueReceiver(final String source, final NamedValueReceiver data) {
         System.out.println("In registerNamedValueReceiver: source="+ source +" data="+data);
+        Pattern entityMarkerPattern = Pattern.compile(flattener.getEntityMarker(),Pattern.LITERAL);
+String entity=entityMarkerPattern.split(source)[0];
+     System.out.println("'"+entity+"'");
+     registeredEntities.add(entity);
         if (ELSE_KEYWORD.equals(source)) {
             elseSources.add(data);
         } else if ("_passEntityEvents".equals(source)) {
-            this.passEntityEvents = true;
+            this.passEntityEvents=true;
         }  
         else {
             dataRegistry.register(source, data);
@@ -243,6 +277,8 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         final String identifierFinal = identifier;
 
         outputStreamReceiver.startRecord(identifierFinal);
+        System.out.println("dis:startRecord");
+
         dispatch(StandardEventNames.ID, identifierFinal, null);
     }
 
@@ -271,27 +307,39 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         currentEntityCount = entityCount;
         entityCountStack.push(Integer.valueOf(entityCount));
 System.out.println("Metamorph-Entity-Start:'"+name+"'");
-        if (this.passEntityEvents) {
-            outputStreamReceiver.startEntity(name);
-        }else
-        flattener.startEntity(name);
+
+        // if (this.passEntityEvents) {
+        //     outputStreamReceiver.startEntity(name);
+        // } 
+         flattener.startEntity(name);
     }
 
     @Override
     public void endEntity() {
+        System.out.println("dis:endEntity");
+
         dispatch(flattener.getCurrentPath(), "", null);
         currentEntityCount = entityCountStack.pop().intValue();
         System.out.println("Metamorph-Entity-End");
-        if (this.passEntityEvents) {
+   
+        // if (this.passEntityEvents) {
+        //     outputStreamReceiver.endEntity();
+        // }
+        if (this.passEntity) {
+            System.out.println("#dispatchEntityEnd");
             outputStreamReceiver.endEntity();
-        }else
-       flattener.endEntity();
+        
+    }
+        if (flattener.getCurrentEntityName() != null)
+        flattener.endEntity();
     }
 
 
     @Override
     public void literal(final String name, final String value) {
+  
         flattener.literal(name, value);
+
 
     }
 
@@ -314,9 +362,10 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
     }
 
     protected void dispatch(final String path, final String value, final List<NamedValueReceiver> fallback) {
-       System.out.println("dispatch. path="+path + "; value="+value);
+       System.out.println("dispatch. path="+path + "; value="+value );
         final List<NamedValueReceiver> matchingData = findMatchingData(path, fallback);
         if (null != matchingData) {
+            System.out.println("matchingData:" + matchingData.toString());
             send(path, value, matchingData);
         }
     }
@@ -324,6 +373,7 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
     private List<NamedValueReceiver> findMatchingData(final String path, final List<NamedValueReceiver> fallback) {
         final List<NamedValueReceiver> matchingData = dataRegistry.get(path);
         if (matchingData == null || matchingData.isEmpty()) {
+         
             return fallback;
         }
         return matchingData;
@@ -351,6 +401,7 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
             throw new IllegalArgumentException("'streamReceiver' must not be null");
         }
         this.outputStreamReceiver = streamReceiver;
+        System.out.println("outputStreamReceiver:"+ outputStreamReceiver.toString());
         return streamReceiver;
     }
 
@@ -365,6 +416,7 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
             throw new IllegalArgumentException(
                     "encountered literal with name='null'. This indicates a bug in a function or a collector.");
         }
+        System.out.println("dis-receive: name = '" + name + "' ; value='" + value + "'");
 
         if (name.length() != 0 && name.charAt(0) == FEEDBACK_CHAR) {
             dispatch(name, value, null);
@@ -372,11 +424,12 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
         }
 
         String unescapedName = name;
-        if(name.length() > 1 && name.charAt(0) == ESCAPE_CHAR
+        if (name.length() > 1 && name.charAt(0) == ESCAPE_CHAR
                 && (name.charAt(1) == FEEDBACK_CHAR || name.charAt(1) == ESCAPE_CHAR)) {
             unescapedName = name.substring(1);
         }
-        outputStreamReceiver.literal(unescapedName, value);
+       
+            outputStreamReceiver.literal(unescapedName, value);
     }
 
     @Override

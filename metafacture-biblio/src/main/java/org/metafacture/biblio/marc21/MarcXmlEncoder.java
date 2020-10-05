@@ -141,7 +141,10 @@ public final class MarcXmlEncoder extends DefaultStreamPipe<ObjectReceiver<Strin
 
     @Override
     public void startEntity(final String name) {
+       // if (name.equals("02312")) {
         System.out.println("MarcXmlEncoder-Entity-Start: '"+name+"'");
+
+      //  }
         currentEntity = name;
         if (!name.equals(Marc21EventNames.LEADER_ENTITY)) {
             if (name.length() != 5) {
@@ -162,7 +165,7 @@ public final class MarcXmlEncoder extends DefaultStreamPipe<ObjectReceiver<Strin
 
     @Override
     public void endEntity() {
-        System.out.println("MarcXmlEncoder-Entity-Start");
+        System.out.println("MarcXmlEncoder-Entity-End");
         if (!currentEntity.equals(Marc21EventNames.LEADER_ENTITY)) {
             decrementIndentationLevel();
             prettyPrintIndentation();
