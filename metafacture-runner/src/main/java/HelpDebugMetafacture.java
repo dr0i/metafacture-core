@@ -19,7 +19,7 @@ public final class HelpDebugMetafacture {
 
 	static final String PATH="/home/pc/git/metafacture-sandbox/enrich_marcxml/"; 
 	public static void main(String... args) {
-		String inputPath = PATH+"807g_alleGOAL.TIT.26.xml_smallest.xml";
+		String inputPath = PATH+"807g_alleGOAL.TIT.26.xml.smallest.xml";
 		final FileOpener opener = new FileOpener();
 		if (inputPath.toLowerCase().endsWith("bz2")) {
 			opener.setCompression("BZIP2");

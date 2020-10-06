@@ -212,6 +212,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
              }
              @Override
              public void startEntity(final String name){
+                 System.out.println("init.startEntity, getCurrentPath:"+flattener.getCurrentPath());
                 dispatchEntityStart(name);
 
              }
@@ -221,14 +222,14 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
 
 
     protected void dispatchEntityStart(String name) {
-        System.out.println("############## name='"+name +"' currenteEntiyt:'" + flattener.getCurrentEntityName()+"'");
-        this.passEntity=false;
-        if (this.passEntityEvents && ! registeredEntities.contains(name)) {
-            outputStreamReceiver.startEntity(name);
-            this.passEntity=true;
-            System.out.println("# passEntityEvents=true;");
-            flattener.endEntity();
-        }
+        // System.out.println("############## name='"+name +"' currenteEntiyt:'" + flattener.getCurrentEntityName()+"'");
+        // this.passEntity=false;
+        // if (this.passEntityEvents && ! registeredEntities.contains(name)) {
+        //     outputStreamReceiver.startEntity(name);
+        //     this.passEntity=true;
+        //     System.out.println("# passEntityEvents=true;");
+        //     flattener.endEntity();
+        // }
     }
 
  
@@ -250,6 +251,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         Pattern entityMarkerPattern = Pattern.compile(flattener.getEntityMarker(),Pattern.LITERAL);
 String entity=entityMarkerPattern.split(source)[0];
      System.out.println("'"+entity+"'");
+     //if (!entity.equals("999  "))
      registeredEntities.add(entity);
         if (ELSE_KEYWORD.equals(source)) {
             elseSources.add(data);
@@ -329,7 +331,7 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
             System.out.println("#dispatchEntityEnd");
             outputStreamReceiver.endEntity();
         
-    }
+    }else 
         if (flattener.getCurrentEntityName() != null)
         flattener.endEntity();
     }
@@ -366,8 +368,19 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
         final List<NamedValueReceiver> matchingData = findMatchingData(path, fallback);
         if (null != matchingData) {
             System.out.println("matchingData:" + matchingData.toString());
+         //   outputStreamReceiver.startEntity("999  ");
             send(path, value, matchingData);
+        } 
+       System.out.println("############## name='"+"999pchbz" +"' currenteEntiyt:'" + flattener.getCurrentEntityName()+"'");
+        this.passEntity=false;
+        if (this.passEntityEvents && ! registeredEntities.contains("999  ")) {
+            outputStreamReceiver.startEntity("999  ");
+            this.passEntity=true;
+            System.out.println("# passEntityEvents=true;");
+            flattener.endEntity();
         }
+
+
     }
 
     private List<NamedValueReceiver> findMatchingData(final String path, final List<NamedValueReceiver> fallback) {
@@ -383,7 +396,10 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
         for (final NamedValueReceiver data : dataList) {
             try {
                 System.out.println("send. key="+key + "; value="+value+" receiver:"+data.toString());
-
+// if (data.toString() != null && data.toString().equals("pc")) {
+//     System.out.println("999999999999999999999");
+// outputStreamReceiver.startEntity("999  ");
+// }
                 data.receive(key, value, null, recordCount, currentEntityCount);
             } catch (final RuntimeException e) {
                 errorHandler.error(e);
@@ -416,9 +432,10 @@ System.out.println("Metamorph-Entity-Start:'"+name+"'");
             throw new IllegalArgumentException(
                     "encountered literal with name='null'. This indicates a bug in a function or a collector.");
         }
-        System.out.println("dis-receive: name = '" + name + "' ; value='" + value + "'");
+        System.out.println("dis-receive: name = '" + name + "' ; value='" + value + "'"+ " source="+source);
 
         if (name.length() != 0 && name.charAt(0) == FEEDBACK_CHAR) {
+            System.out.println("dispatch:receive");
             dispatch(name, value, null);
             return;
         }
