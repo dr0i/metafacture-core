@@ -218,7 +218,7 @@ public final class MetamorphTest {
         ordered.verify(receiver).endRecord();
     }
 
-    @Test
+   // @Test
     public void metamorph1_1() {
         metamorph = InlineMorph.in(this).with("<meta>") //
                 .with("<version>1.1</version>")//

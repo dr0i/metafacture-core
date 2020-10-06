@@ -103,7 +103,8 @@ public final class MarcXmlEncoder extends DefaultStreamPipe<ObjectReceiver<Strin
     /**
      * Formats the resulting xml, by indentation.
      * 
-     * @param formatted True, if formatting is activated.
+     * @param formatted
+     *            True, if formatting is activated.
      */
     public void setFormatted(boolean formatted) {
         this.formatted = formatted;
@@ -140,6 +141,10 @@ public final class MarcXmlEncoder extends DefaultStreamPipe<ObjectReceiver<Strin
 
     @Override
     public void startEntity(final String name) {
+       // if (name.equals("02312")) {
+        System.out.println("MarcXmlEncoder-Entity-Start: '"+name+"'");
+
+      //  }
         currentEntity = name;
         if (!name.equals(Marc21EventNames.LEADER_ENTITY)) {
             if (name.length() != 5) {
@@ -155,15 +160,12 @@ public final class MarcXmlEncoder extends DefaultStreamPipe<ObjectReceiver<Strin
             writeRaw(String.format(DATAFIELD_OPEN_TEMPLATE, tag, ind1, ind2));
             prettyPrintNewLine();
             incrementIndentationLevel();
-        } else {
-            prettyPrintIndentation();
-            writeRaw(LEADER_OPEN_TEMPLATE);
         }
-
     }
 
     @Override
     public void endEntity() {
+        System.out.println("MarcXmlEncoder-Entity-End");
         if (!currentEntity.equals(Marc21EventNames.LEADER_ENTITY)) {
             decrementIndentationLevel();
             prettyPrintIndentation();
@@ -175,23 +177,24 @@ public final class MarcXmlEncoder extends DefaultStreamPipe<ObjectReceiver<Strin
 
     @Override
     public void literal(final String name, final String value) {
-        if (value == null || value.isEmpty())
-            return;
+        System.out.println("Literal-MarcXmlEncoder:" +name + " = '" + value+"'" );
         if (currentEntity.equals("")) {
             prettyPrintIndentation();
-            writeRaw(String.format(CONTROLFIELD_OPEN_TEMPLATE, name.replaceFirst("\\W", "")));
-            writeEscaped(value.trim());
+            writeRaw(String.format(CONTROLFIELD_OPEN_TEMPLATE, name));
+            if (value!=null)
+                writeEscaped(value.trim());
             writeRaw(CONTROLFIELD_CLOSE);
             prettyPrintNewLine();
         } else if (!currentEntity.equals(Marc21EventNames.LEADER_ENTITY)) {
             prettyPrintIndentation();
-            writeRaw(String.format(SUBFIELD_OPEN_TEMPLATE, name.charAt(name.indexOf('.') + 1)));
+            writeRaw(String.format(SUBFIELD_OPEN_TEMPLATE, name));
             writeEscaped(value.trim());
             writeRaw(SUBFIELD_CLOSE);
             prettyPrintNewLine();
         } else {
-            {
-                writeRaw(value + LEADER_CLOSE_TEMPLATE);
+            if (name.equals(Marc21EventNames.LEADER_ENTITY)) {
+                prettyPrintIndentation();
+                writeRaw(LEADER_OPEN_TEMPLATE + value + LEADER_CLOSE_TEMPLATE);
                 prettyPrintNewLine();
             }
         }

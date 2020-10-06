@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mx:collection xmlns:mx="http://www.loc.gov/MARC21/slim" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd">
+<mx:record xmlns:mx="http://www.loc.gov/MARC21/slim" id="ID1635091">
+        <mx:datafield ind1=" " ind2=" " tag="981">
+            <mx:subfield code="a">HL011421502</mx:subfield>
+        </mx:datafield>
+        <mx:datafield ind1=" " ind2=" " tag="999">
+            <mx:subfield code="a">hbzebo_springer</mx:subfield>
+            <mx:subfield code="m">1</mx:subfield>
+            <mx:subfield code="n">1209</mx:subfield>
+        </mx:datafield>
+        <mx:datafield ind1=" " ind2=" " tag="999">
+            <mx:subfield code="a">g</mx:subfield>
+            <mx:subfield code="m">1</mx:subfield>
+            <mx:subfield code="n">2807</mx:subfield>
+        </mx:datafield>
+    </mx:record>
+    
+</mx:collection>

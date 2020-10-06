@@ -169,13 +169,13 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     public Metamorph(final InputSource inputSource, final Map<String, String> vars,
             final InterceptorFactory interceptorFactory) {
         buildPipeline(inputSource, vars, interceptorFactory);
-        init();
+        init(); //siehe unten
     }
-
+     MorphBuilder builder;
     private void buildPipeline(InputSource inputSource, Map<String, String> vars,
             InterceptorFactory interceptorFactory) {
         try {
-            final MorphBuilder builder = new MorphBuilder(this, interceptorFactory);
+             builder = new MorphBuilder(this, interceptorFactory);
             builder.walk(inputSource, vars);
         } catch (RuntimeException e) {
             throw new MetamorphException(
@@ -186,6 +186,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
 
     private static InputSource getInputSource(final String morphDef) {
         try {
+            
             return new InputSource(
                     ResourceUtil.getUrl(morphDef).toExternalForm());
         } catch (final MalformedURLException e) {
@@ -194,9 +195,12 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     }
 
     private void init() {
-        flattener.setReceiver(new DefaultStreamReceiver() {
+        System.out.println("outputStreamReceiver="+outputStreamReceiver);
+         flattener.setReceiver //(outputStreamReceiver);
+         (new DefaultStreamReceiver() {
             @Override
             public void literal(final String name, final String value) {
+                System.out.println("literalOverride: name="+name + ", value="+value);
                 dispatch(name, value, getElseSources());
             }
         });
@@ -215,7 +219,9 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     }
 
     protected void registerNamedValueReceiver(final String source, final NamedValueReceiver data) {
+        System.out.println("registerNamedValueReceiver: source="+source + ", data="+data);
         if (ELSE_KEYWORD.equals(source)) {
+            System.out.println("in else");
             elseSources.add(data);
         } else {
             dataRegistry.register(source, data);
@@ -255,6 +261,7 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         }
 
         flattener.endRecord();
+        
     }
 
     @Override
@@ -267,9 +274,9 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         currentEntityCount = entityCount;
         entityCountStack.push(Integer.valueOf(entityCount));
 
+        // if (maps.containsKey(METADATA) && maps.get(METADATA).getOrDefault("version","").equals("1.1"))
+        // outputStreamReceiver.startEntity(name);
         flattener.startEntity(name);
-        if (maps.containsKey(METADATA) && maps.get(METADATA).getOrDefault("version","").equals("1.1"))
-            outputStreamReceiver.startEntity(name);
 
     }
 
@@ -277,16 +284,17 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
     public void endEntity() {
         dispatch(flattener.getCurrentPath(), "", null);
         currentEntityCount = entityCountStack.pop().intValue();
+        // if (maps.containsKey(METADATA) && maps.get(METADATA).getOrDefault("version","").equals("1.1"))
+        // outputStreamReceiver.endEntity();
         flattener.endEntity();
-        if (maps.containsKey(METADATA) && maps.get(METADATA).getOrDefault("version","").equals("1.1"))
-            outputStreamReceiver.endEntity();
+       // builder.
     }
 
 
     @Override
     public void literal(final String name, final String value) {
         flattener.literal(name, value);
-
+     // outputStreamReceiver.literal(name, value);
     }
 
     @Override
@@ -321,11 +329,16 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         }
         return matchingData;
     }
-
+    Entity e= new Entity(this); 
     private void send(final String key, final String value, final List<NamedValueReceiver> dataList) {
         for (final NamedValueReceiver data : dataList) {
             try {
-                data.receive(key, value, null, recordCount, currentEntityCount);
+                System.out.println("send: key="+key+", value="+value+",dataLocation="+data.getSourceLocation()+"+data:"+data.getClass().getSimpleName()+"; flattener.getCurrentEntityName()="+flattener.getCurrentEntityName());   
+                
+                e.receive("999  ", "n", null, recordCount, currentEntityCount);
+               System.out.println("outputStreamReceiver="+outputStreamReceiver);
+                outputStreamReceiver.startEntity("999  ");
+             data.receive(key, value, null, recordCount, currentEntityCount);
             } catch (final RuntimeException e) {
                 errorHandler.error(e);
             }
@@ -341,7 +354,9 @@ public final class Metamorph implements StreamPipe<StreamReceiver>, NamedValuePi
         if (streamReceiver == null) {
             throw new IllegalArgumentException("'streamReceiver' must not be null");
         }
+        System.out.println("setReceiver"+streamReceiver);
         this.outputStreamReceiver = streamReceiver;
+        init();
         return streamReceiver;
     }
 

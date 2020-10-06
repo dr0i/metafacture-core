@@ -1,0 +1,36 @@
+MarcXmlHandler->Metamorh->StreamFlattener->EntityPathTracker
+
+Die "_else" Daten gehen nicht zum MarcXmlEncoder.startEntity sondern zum
+MarcXmlEncoder.literal, auch wenn es eigentlich entities sindi (plus subflieds), z.B "999  .a" = 'hbzebo_springer'.. Eigentlich sollte nur da "a=hbzebo_springer" an das MarcXmlEncoder.literal.
+
+Die entity-events aus der input datei (durch das "_else" gefeuert) werden genauso wie die entity-events
+aus der morph behandelt (naja, nicht ganz: die gehen nicht ins dispatch rein). Das führt dazu:
+
+		<marc:datafield tag="999" ind1=" " ind2=" ">
+			<marc:subfield code="a">g</marc:subfield>
+			<marc:subfield code="m">1</marc:subfield>
+			<marc:datafield tag="023" ind1="1" ind2="2">
+				<marc:subfield code="h">valuejhj</marc:subfield>
+				<marc:subfield code="h">valuejhj</marc:subfield>
+			</marc:datafield>
+		</marc:datafield>
+
+wenn in der Morph steht:
+<entity name ="02312" >
+<combine name="huhu" value="valuejhj">
+<data source="999  .n"/> 
+</combine>
+</entity>
+
+        <data source="_else"/>
+
+
+so kannst du unterschieden, ob es vom _else gefeurt wurde:
+send: key=999  .m, value=1,data=file:/home/pc/git/metafacture-sandbox/enrich_marcxml/morph1.1.xml:26:31 - 26:31flattener.getCurrentEntityName()=999
+(die 26:31 ist das _else)
+
+
+###
+starte komisch cmd:
+~ cd /home/pc/git/metafacture-core ; /usr/lib/jvm/jdk-11.0.2/bin/java -Dfile.encoding=UTF-8 @/tmp/cp_ejgqqi6ko8hom9z78k3tumfyx.argfile org.metafacture.runner.HelpDebugMetafacture 
+

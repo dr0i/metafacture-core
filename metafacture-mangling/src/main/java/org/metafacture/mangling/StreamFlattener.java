@@ -91,13 +91,17 @@ public final class StreamFlattener extends DefaultStreamPipe<StreamReceiver> {
     public void startEntity(final String name) {
         assert !isClosed();
         pathTracker.startEntity(name);
+  getReceiver().startEntity(name);
     }
 
     @Override
     public void endEntity() {
         assert !isClosed();
         pathTracker.endEntity();
+    getReceiver().endEntity();
     }
+
+
 
     @Override
     public void literal(final String name, final String value) {

@@ -76,6 +76,7 @@ public final class Entity extends AbstractFlushingCollect {
     @Override
     protected void receive(final String name, final String value,
             final NamedValueSource source) {
+                System.out.println("Entity, name="+ name +",value"+value);
         if (source == nameSource) {
             currentName = value;
         } else if (source instanceof Entity) {

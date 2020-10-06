@@ -187,6 +187,8 @@ public final class MorphBuilder extends AbstractMetamorphDomWalker {
 
     @Override
     protected void enterData(final Node dataNode) {
+        System.out.println("enterData "+dataNode.toString());
+
         final Data data = new Data();
         data.setName(resolvedAttribute(dataNode, AttributeName.NAME));
         data.setSourceLocation(getSourceLocation(dataNode));
@@ -275,6 +277,8 @@ public final class MorphBuilder extends AbstractMetamorphDomWalker {
         } else {
             collect = getCollectFactory().newInstance(node.getLocalName(), attributes);
         }
+       if( collect.getName().equals("02312"))
+       System.out.println("collect.getName(02312)");
         collect.setSourceLocation(getSourceLocation(node));
 
         stack.push(new StackFrame(collect));
